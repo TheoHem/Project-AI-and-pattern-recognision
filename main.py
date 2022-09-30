@@ -6,13 +6,14 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn import svm
 
 def load_data(filename):
     return pd.read_csv(filename, header=None)
 
+'''
 def segment_gesture(df):
     return_df = pd.DataFrame()
     
@@ -27,8 +28,9 @@ def segment_gesture(df):
     return_df["gesture_name"] = gesture_name
 
     return return_df
+'''
 
-def visualize_gesture(df):
+def visualize_points_gesture(df):
     x = df[::3]
     y = df[1::3]
     z = df[2::3]
@@ -41,6 +43,10 @@ def visualize_gesture(df):
     
     ax.scatter(x,y,z) # plot the point (2,3,4) on the figure
     #ax.plot(x,y,z)
+    plt.show()
+
+def visualize_labels(df):
+    df.value_counts().plot(kind='bar')
     plt.show()
     
 def train_decision_tree(train_data, train_labels):
@@ -59,14 +65,21 @@ def train_SVM(train_data, train_labels):
     clf = svm.SVC(kernel = 'linear',gamma = 'scale', shrinking = False,).fit(train_data, train_labels)
     return clf
 
+def train_kNN(train_data, train_labels):
+    neigh = KNeighborsClassifier(n_neighbors=3).fit(train_data, train_labels)
+    return neigh
+
 
 if __name__ == '__main__':
+    #Loading data
     data = load_data("train-final.csv")
     test_data = load_data("test-final.csv")
     
+    #Removing gestures with missing values
     train_data = data.dropna(axis=0)
     test_data = test_data.dropna(axis=0)
     
+    #Preprocessing data for algoritms
     train_labels = train_data[240]
     train_labels_num = train_data[241]
     labels_to_num = dict(zip(train_labels.tolist(), train_labels_num.tolist()))
@@ -76,6 +89,11 @@ if __name__ == '__main__':
     test_labels_num = test_data[241]
     test_data = test_data.drop([240, 241], axis=1)
     
+    #Ploting the points of one gesture from the train dataset
+    visualize_points_gesture(train_data.iloc[3])
+    visualize_labels(train_labels)
+    
+    #Using different classifying algoritms and printing their score
     #Decision Tree
     decision_tree = train_decision_tree(train_data, train_labels_num)
     score = decision_tree.score(test_data, test_labels_num)
@@ -95,4 +113,9 @@ if __name__ == '__main__':
     SVM = train_SVM(train_data, train_labels_num)
     score = SVM.score(test_data, test_labels_num)
     print(f"Score from SVM is: {score}")
+    
+    #kNN
+    kNN = train_kNN(train_data, train_labels_num)
+    score = kNN.score(test_data, test_labels_num)
+    print(f"Score from kNN is: {score}")
    
